@@ -154,16 +154,49 @@ $('#clear_all').click(function(){
 /* Initialize Chart and Selectors */
 /*  */
 
-let p2dat = $('#pricing-selector').select2('data')
-let pricing = p2dat[0].prog_value
+/* let p2dat = $('#pricing-selector').select2('data')
+let pricing = p2dat[0].prog_value  */
+// Sync issue when deployed on RFF's website. 
+// For now, moving to hardcoded default
+let pricing = 'tax'
 
 d3.csv('./data/ecp_' + pricing + '.csv').then(function(data){
   
   cur_data = data
-  let sector = $('#sector-selector').val()
+ /*  let sector = $('#sector-selector').val()  */// Sync issue when deployed on RFF's website. For now, moving to hardcoded default
+  let sector = '1A1A1 Electricity Generation'
   sector = sector === null ? undefined : sector.split(' ')[0]
+  let pricing = 'tax'
 
-  UpdateS()
-  UpdatePY()
+/*   UpdateS() + UpdatePY() */
+
+  let sel_data = cur_data.filter(
+    d => (d.ipcc_code === sector
+          & d[pricing] !== "NA"
+        )
+  )
+
+    let loc_juri = sel_data.map(d => d.jurisdiction)
+    cur_pos_juri = [...new Set(loc_juri)]
+
+    UpdateJuriSelect(cur_pos_juri)
+
+    cur_juri = cur_pos_juri.slice(0,n_rand_juri)
+
+    let loc_sector =  cur_data
+                      .filter(d => d[pricing] !== "NA")
+                      .map(d => d.ipcc_code)
+    cur_pos_sector = [... new Set(loc_sector)]
+
+    UpdateSectorSelect(cur_pos_sector)
+
+    cur_juri.length === 0 
+        ? NoDataChart()
+        : UpdateChart(sel_data, cur_juri)
+
+    let checked = d3.selectAll('.juri-check')
+    .filter(function(){return this.checked})
+    cur_numb_sel_juri = checked['_groups'][0].length
+
 })
 
